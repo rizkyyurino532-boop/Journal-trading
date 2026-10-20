@@ -1,0 +1,752 @@
+<!doctype html>
+<html lang="id" class="dark">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>TradePulse Pro — Trading Journal &amp; Analytics Dashboard</title>
+
+    <!-- Google Fonts: Inter & JetBrains Mono (untuk angka finansial presisi) -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700&display=swap"
+      rel="stylesheet"
+    />
+
+    <!-- Tailwind CSS melalui CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            fontFamily: {
+              sans: ["Inter", "sans-serif"],
+              mono: ["JetBrains Mono", "monospace"],
+            },
+            colors: {
+              terminal: {
+                bg: "#080C14",
+                card: "#0F1624",
+                cardHover: "#141D2F",
+                border: "#1E293B",
+                input: "#0B101B",
+              },
+            },
+          },
+        },
+      };
+    </script>
+
+    <!-- File CSS Kustom Eksternal -->
+    <link rel="stylesheet" href="style.css" />
+  </head>
+  <body
+    class="bg-terminal-bg text-slate-100 font-sans antialiased min-h-screen flex flex-col selection:bg-emerald-500/30 selection:text-emerald-300"
+  >
+    <!-- ======================================================================
+         1. HEADER / TOP NAVBAR
+         ====================================================================== -->
+    <header
+      class="sticky top-0 z-30 bg-terminal-bg/85 backdrop-blur-md border-b border-terminal-border"
+    >
+      <div
+        class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between gap-4"
+      >
+        <!-- Brand Identity -->
+        <div class="flex items-center gap-3">
+          <div
+            class="w-10 h-10 rounded-xl bg-gradient-to-br from-emerald-500 to-teal-600 flex items-center justify-center shadow-lg shadow-emerald-500/20"
+          >
+            <svg
+              class="w-5 h-5 text-slate-950"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+              stroke-width="2.5"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"
+              />
+            </svg>
+          </div>
+          <div>
+            <div class="flex items-center gap-2">
+              <h1
+                class="text-base sm:text-lg font-bold tracking-tight text-white"
+              >
+                TradePulse<span class="text-emerald-400">.pro</span>
+              </h1>
+              <span
+                class="hidden sm:inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-mono font-medium bg-emerald-500/10 text-emerald-400 border border-emerald-500/20"
+              >
+                LIVE JOURNAL
+              </span>
+            </div>
+            <p class="text-xs text-slate-400">
+              Personal Trading Performance &amp; Psychology Tracker
+            </p>
+          </div>
+        </div>
+
+        <!-- Action Controls (Modal Awal, Data Contoh, Reset) -->
+        <div class="flex items-center gap-2 sm:gap-3">
+          <div
+            class="hidden md:flex items-center gap-2 bg-terminal-card border border-terminal-border rounded-lg px-3 py-1.5"
+          >
+            <span class="text-xs text-slate-400">Modal Awal ($):</span>
+            <input
+              type="number"
+              id="initial-balance-input"
+              value="10000"
+              step="100"
+              min="0"
+              class="w-24 bg-transparent text-xs font-mono font-semibold text-white focus:outline-none focus:text-emerald-400 text-right"
+              title="Ubah modal awal akun trading Anda"
+            />
+          </div>
+
+          <button
+            type="button"
+            id="load-sample-btn"
+            class="text-xs font-medium px-3 py-2 rounded-lg bg-slate-800/80 hover:bg-slate-700/80 text-slate-300 border border-slate-700 transition cursor-pointer"
+            title="Muat contoh data transaksi trading"
+          >
+            + Data Contoh
+          </button>
+
+          <button
+            type="button"
+            id="clear-all-btn"
+            class="text-xs font-medium px-3 py-2 rounded-lg bg-rose-500/10 hover:bg-rose-500/20 text-rose-400 border border-rose-500/20 transition cursor-pointer"
+            title="Hapus seluruh riwayat trading"
+          >
+            Reset Jurnal
+          </button>
+        </div>
+      </div>
+    </header>
+
+    <!-- ======================================================================
+         2. MAIN CONTENT CONTAINER
+         ====================================================================== -->
+    <main
+      class="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8 space-y-8"
+    >
+      <!-- ------------------------------------------------------------------
+             BAGIAN 1: RINGKASAN STATISTIK (4 DASHBOARD CARDS)
+             ------------------------------------------------------------------ -->
+      <section aria-label="Ringkasan Statistik">
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+          <!-- Card 1: Total Saldo & Net P&L -->
+          <div
+            class="bg-terminal-card border border-terminal-border rounded-2xl p-5 relative overflow-hidden group hover:border-slate-700 transition"
+          >
+            <div class="flex items-center justify-between mb-3">
+              <span
+                class="text-xs font-semibold uppercase tracking-wider text-slate-400"
+                >Total Saldo / Net P&amp;L</span
+              >
+              <span
+                class="w-8 h-8 rounded-lg bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center text-emerald-400"
+              >
+                <svg
+                  class="w-4 h-4"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                  stroke-width="2"
+                >
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                  />
+                </svg>
+              </span>
+            </div>
+            <div
+              class="font-mono text-2xl sm:text-3xl font-bold tracking-tight text-white"
+              id="stat-total-balance"
+            >
+              $10,000.00
+            </div>
+            <div class="mt-2 flex items-center justify-between text-xs">
+              <span class="text-slate-400">Net P&amp;L:</span>
+              <span
+                class="font-mono font-semibold text-emerald-400"
+                id="stat-net-pnl"
+                >+$0.00 (0.00%)</span
+              >
+            </div>
+          </div>
+
+          <!-- Card 2: Win Rate (%) -->
+          <div
+            class="bg-terminal-card border border-terminal-border rounded-2xl p-5 relative overflow-hidden group hover:border-slate-700 transition"
+          >
+            <div class="flex items-center justify-between mb-3">
+              <span
+                class="text-xs font-semibold uppercase tracking-wider text-slate-400"
+                >Win Rate (%)</span
+              >
+              <span
+                class="w-8 h-8 rounded-lg bg-sky-500/10 border border-sky-500/20 flex items-center justify-center text-sky-400"
+              >
+                <svg
+                  class="w-4 h-4"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                  stroke-width="2"
+                >
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
+                  />
+                </svg>
+              </span>
+            </div>
+            <div class="flex items-baseline justify-between">
+              <div
+                class="font-mono text-2xl sm:text-3xl font-bold tracking-tight text-white"
+                id="stat-win-rate"
+              >
+                0.0%
+              </div>
+              <span class="text-xs font-mono text-slate-400" id="stat-wl-ratio"
+                >0W / 0L / 0BE</span
+              >
+            </div>
+            <!-- Win Rate Visual Bar -->
+            <div
+              class="w-full h-2 bg-slate-800 rounded-full overflow-hidden mt-3 flex"
+            >
+              <div
+                id="winrate-bar-fill"
+                class="h-full bg-gradient-to-r from-emerald-500 to-teal-400 transition-all duration-500"
+                style="width: 0%"
+              ></div>
+            </div>
+          </div>
+
+          <!-- Card 3: Total Trade -->
+          <div
+            class="bg-terminal-card border border-terminal-border rounded-2xl p-5 relative overflow-hidden group hover:border-slate-700 transition"
+          >
+            <div class="flex items-center justify-between mb-3">
+              <span
+                class="text-xs font-semibold uppercase tracking-wider text-slate-400"
+                >Total Trade</span
+              >
+              <span
+                class="w-8 h-8 rounded-lg bg-indigo-500/10 border border-indigo-500/20 flex items-center justify-center text-indigo-400"
+              >
+                <svg
+                  class="w-4 h-4"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                  stroke-width="2"
+                >
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"
+                  />
+                </svg>
+              </span>
+            </div>
+            <div
+              class="font-mono text-2xl sm:text-3xl font-bold tracking-tight text-white"
+              id="stat-total-trades"
+            >
+              0
+            </div>
+            <div class="mt-2 flex items-center justify-between text-xs">
+              <span class="text-emerald-400 font-mono" id="stat-long-count"
+                >▲ 0 Buy/Long</span
+              >
+              <span class="text-rose-400 font-mono" id="stat-short-count"
+                >▼ 0 Sell/Short</span
+              >
+            </div>
+          </div>
+
+          <!-- Card 4: Profit Factor -->
+          <div
+            class="bg-terminal-card border border-terminal-border rounded-2xl p-5 relative overflow-hidden group hover:border-slate-700 transition"
+          >
+            <div class="flex items-center justify-between mb-3">
+              <span
+                class="text-xs font-semibold uppercase tracking-wider text-slate-400"
+                >Profit Factor</span
+              >
+              <span
+                class="w-8 h-8 rounded-lg bg-amber-500/10 border border-amber-500/20 flex items-center justify-center text-amber-400"
+              >
+                <svg
+                  class="w-4 h-4"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                  stroke-width="2"
+                >
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    d="M13 10V3L4 14h7v7l9-11h-7z"
+                  />
+                </svg>
+              </span>
+            </div>
+            <div class="flex items-baseline gap-2">
+              <div
+                class="font-mono text-2xl sm:text-3xl font-bold tracking-tight text-white"
+                id="stat-profit-factor"
+              >
+                0.00
+              </div>
+              <span
+                id="stat-pf-badge"
+                class="text-[11px] font-mono px-2 py-0.5 rounded-full bg-slate-800 text-slate-400"
+                >Netral</span
+              >
+            </div>
+            <div
+              class="mt-2 flex items-center justify-between text-xs font-mono"
+            >
+              <span class="text-emerald-400/90" id="stat-gross-profit"
+                >GP: +$0.00</span
+              >
+              <span class="text-rose-400/90" id="stat-gross-loss"
+                >GL: -$0.00</span
+              >
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ------------------------------------------------------------------
+             BAGIAN 2 & 3: GRID UTAMA (FORM INPUT DI KIRI, TABEL RIWAYAT DI KANAN)
+             ------------------------------------------------------------------ -->
+      <section class="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+        <!-- ==============================================================
+                 KOLOM KIRI (4 KOLOM): FORMULIR INPUT DATA TRADE
+                 ============================================================== -->
+        <div
+          class="lg:col-span-4 bg-terminal-card border border-terminal-border rounded-2xl p-6 shadow-xl"
+        >
+          <div
+            class="flex items-center justify-between pb-4 mb-5 border-b border-terminal-border"
+          >
+            <div>
+              <h2
+                class="text-base font-bold text-white flex items-center gap-2"
+              >
+                <span class="w-2 h-2 rounded-full bg-emerald-400"></span>
+                Input Transaksi Baru
+              </h2>
+              <p class="text-xs text-slate-400 mt-0.5">
+                Catat eksekusi &amp; psikologi trading Anda
+              </p>
+            </div>
+          </div>
+
+          <form id="trade-form" class="space-y-4">
+            <!-- 1. Tanggal & Waktu -->
+            <div>
+              <label
+                for="trade-date"
+                class="block text-xs font-medium text-slate-300 mb-1.5"
+                >Tanggal &amp; Waktu Eksekusi</label
+              >
+              <input
+                type="datetime-local"
+                id="trade-date"
+                required
+                class="w-full bg-terminal-input border border-terminal-border rounded-xl px-3.5 py-2.5 text-sm font-mono text-white focus:outline-none focus:border-emerald-500 transition"
+              />
+            </div>
+
+            <!-- 2. Pair / Aset & 3. Tipe Posisi -->
+            <div class="grid grid-cols-2 gap-3">
+              <div>
+                <label
+                  for="trade-pair"
+                  class="block text-xs font-medium text-slate-300 mb-1.5"
+                  >Pair / Aset</label
+                >
+                <input
+                  type="text"
+                  id="trade-pair"
+                  list="popular-pairs"
+                  placeholder="XAUUSD"
+                  required
+                  class="w-full uppercase bg-terminal-input border border-terminal-border rounded-xl px-3.5 py-2.5 text-sm font-mono font-semibold text-white placeholder-slate-600 focus:outline-none focus:border-emerald-500 transition"
+                />
+                <datalist id="popular-pairs">
+                  <option value="XAUUSD">Gold / US Dollar</option>
+                  <option value="EURUSD">Euro / US Dollar</option>
+                  <option value="BTCUSDT">Bitcoin / Tether</option>
+                  <option value="GBPUSD">British Pound / USD</option>
+                  <option value="USDJPY">US Dollar / Yen</option>
+                  <option value="NAS100">Nasdaq 100</option>
+                  <option value="ETHUSDT">Ethereum / Tether</option>
+                </datalist>
+              </div>
+
+              <div>
+                <label
+                  for="trade-type"
+                  class="block text-xs font-medium text-slate-300 mb-1.5"
+                  >Tipe Posisi</label
+                >
+                <select
+                  id="trade-type"
+                  required
+                  class="w-full bg-terminal-input border border-terminal-border rounded-xl px-3.5 py-2.5 text-sm font-mono font-semibold text-emerald-400 focus:outline-none focus:border-emerald-500 transition"
+                >
+                  <option value="BUY" class="text-emerald-400 bg-slate-900">
+                    ▲ BUY / LONG
+                  </option>
+                  <option value="SELL" class="text-rose-400 bg-slate-900">
+                    ▼ SELL / SHORT
+                  </option>
+                </select>
+              </div>
+            </div>
+
+            <!-- 4. Harga Masuk (Entry) & Harga Keluar (Exit) -->
+            <div class="grid grid-cols-2 gap-3">
+              <div>
+                <label
+                  for="entry-price"
+                  class="block text-xs font-medium text-slate-300 mb-1.5"
+                  >Harga Masuk (Entry)</label
+                >
+                <input
+                  type="number"
+                  id="entry-price"
+                  step="any"
+                  placeholder="2650.50"
+                  required
+                  class="w-full bg-terminal-input border border-terminal-border rounded-xl px-3.5 py-2.5 text-sm font-mono text-white placeholder-slate-600 focus:outline-none focus:border-emerald-500 transition"
+                />
+              </div>
+
+              <div>
+                <label
+                  for="exit-price"
+                  class="block text-xs font-medium text-slate-300 mb-1.5"
+                  >Harga Keluar (Exit)</label
+                >
+                <input
+                  type="number"
+                  id="exit-price"
+                  step="any"
+                  placeholder="2665.00"
+                  required
+                  class="w-full bg-terminal-input border border-terminal-border rounded-xl px-3.5 py-2.5 text-sm font-mono text-white placeholder-slate-600 focus:outline-none focus:border-emerald-500 transition"
+                />
+              </div>
+            </div>
+
+            <!-- 5. Lot / Ukuran Posisi & Nominal P&L ($) -->
+            <div class="grid grid-cols-2 gap-3">
+              <div>
+                <label
+                  for="lot-size"
+                  class="block text-xs font-medium text-slate-300 mb-1.5"
+                  >Lot / Ukuran Posisi</label
+                >
+                <input
+                  type="number"
+                  id="lot-size"
+                  step="any"
+                  min="0.01"
+                  placeholder="0.10"
+                  required
+                  class="w-full bg-terminal-input border border-terminal-border rounded-xl px-3.5 py-2.5 text-sm font-mono text-white placeholder-slate-600 focus:outline-none focus:border-emerald-500 transition"
+                />
+              </div>
+
+              <div>
+                <div class="flex items-center justify-between mb-1.5">
+                  <label
+                    for="pnl-amount"
+                    class="block text-xs font-medium text-slate-300"
+                    >Hasil P&amp;L ($)</label
+                  >
+                  <button
+                    type="button"
+                    id="auto-calc-btn"
+                    class="text-[11px] font-mono text-emerald-400 hover:underline cursor-pointer"
+                    title="Hitung otomatis dari selisih Entry & Exit"
+                  >
+                    Hitung Otomatis
+                  </button>
+                </div>
+                <input
+                  type="number"
+                  id="pnl-amount"
+                  step="any"
+                  placeholder="145.00"
+                  required
+                  class="w-full bg-terminal-input border border-terminal-border rounded-xl px-3.5 py-2.5 text-sm font-mono font-semibold text-white placeholder-slate-600 focus:outline-none focus:border-emerald-500 transition"
+                />
+              </div>
+            </div>
+
+            <!-- 6. Status Trade (Profit, Loss, Breakeven) -->
+            <div>
+              <label class="block text-xs font-medium text-slate-300 mb-1.5"
+                >Status Hasil Trade</label
+              >
+              <div class="grid grid-cols-3 gap-2.5" id="status-selector">
+                <label class="cursor-pointer">
+                  <input
+                    type="radio"
+                    name="trade-status"
+                    value="PROFIT"
+                    class="peer sr-only"
+                    checked
+                  />
+                  <div
+                    class="text-center py-2.5 px-3 rounded-xl border border-terminal-border bg-terminal-input text-xs font-mono font-semibold text-slate-400 peer-checked:bg-emerald-500/15 peer-checked:border-emerald-500 peer-checked:text-emerald-400 transition"
+                  >
+                    PROFIT
+                  </div>
+                </label>
+                <label class="cursor-pointer">
+                  <input
+                    type="radio"
+                    name="trade-status"
+                    value="LOSS"
+                    class="peer sr-only"
+                  />
+                  <div
+                    class="text-center py-2.5 px-3 rounded-xl border border-terminal-border bg-terminal-input text-xs font-mono font-semibold text-slate-400 peer-checked:bg-rose-500/15 peer-checked:border-rose-500 peer-checked:text-rose-400 transition"
+                  >
+                    LOSS
+                  </div>
+                </label>
+                <label class="cursor-pointer">
+                  <input
+                    type="radio"
+                    name="trade-status"
+                    value="BREAKEVEN"
+                    class="peer sr-only"
+                  />
+                  <div
+                    class="text-center py-2.5 px-3 rounded-xl border border-terminal-border bg-terminal-input text-xs font-mono font-semibold text-slate-400 peer-checked:bg-amber-500/15 peer-checked:border-amber-500 peer-checked:text-amber-400 transition"
+                  >
+                    BREAKEVEN
+                  </div>
+                </label>
+              </div>
+            </div>
+
+            <!-- 7. Catatan & Psikologi Trading -->
+            <div>
+              <div class="flex items-center justify-between mb-1.5">
+                <label
+                  for="trade-notes"
+                  class="block text-xs font-medium text-slate-300"
+                  >Catatan / Psikologi Trading</label
+                >
+                <span class="text-[11px] text-slate-500">Klik tag cepat:</span>
+              </div>
+              <!-- Quick Psychology Tags -->
+              <div class="flex flex-wrap gap-1.5 mb-2">
+                <button
+                  type="button"
+                  class="psych-tag text-[11px] px-2 py-0.5 rounded-md bg-slate-800/90 hover:bg-slate-700 text-slate-300 border border-slate-700 transition"
+                  data-tag="[Disiplin Sesuai Plan] "
+                >
+                  + Sesuai Plan
+                </button>
+                <button
+                  type="button"
+                  class="psych-tag text-[11px] px-2 py-0.5 rounded-md bg-slate-800/90 hover:bg-slate-700 text-slate-300 border border-slate-700 transition"
+                  data-tag="[Tenang & Sabar] "
+                >
+                  + Sabar
+                </button>
+                <button
+                  type="button"
+                  class="psych-tag text-[11px] px-2 py-0.5 rounded-md bg-slate-800/90 hover:bg-slate-700 text-rose-300 border border-slate-700 transition"
+                  data-tag="[FOMO Entry] "
+                >
+                  + FOMO
+                </button>
+                <button
+                  type="button"
+                  class="psych-tag text-[11px] px-2 py-0.5 rounded-md bg-slate-800/90 hover:bg-slate-700 text-amber-300 border border-slate-700 transition"
+                  data-tag="[Geser SL / Panik] "
+                >
+                  + Panik
+                </button>
+              </div>
+              <textarea
+                id="trade-notes"
+                rows="3"
+                placeholder="Contoh: Entry setelah konfirmasi rejection di area Demand H1. Emosi tenang dan mengikuti risk 1%..."
+                class="w-full bg-terminal-input border border-terminal-border rounded-xl px-3.5 py-2.5 text-sm text-white placeholder-slate-600 focus:outline-none focus:border-emerald-500 transition resize-none"
+              ></textarea>
+            </div>
+
+            <!-- Tombol Submit -->
+            <button
+              type="submit"
+              class="w-full py-3 px-4 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-400 hover:to-teal-400 text-slate-950 font-bold text-sm shadow-lg shadow-emerald-500/20 hover:shadow-emerald-500/35 transition transform active:scale-[0.99] cursor-pointer flex items-center justify-center gap-2"
+            >
+              <svg
+                class="w-4 h-4"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+                stroke-width="2.5"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  d="M12 4v16m8-8H4"
+                />
+              </svg>
+              <span>Simpan ke Jurnal Trading</span>
+            </button>
+          </form>
+        </div>
+
+        <!-- ==============================================================
+                 KOLOM KANAN (8 KOLOM): TABEL RIWAYAT TRADING & FILTER
+                 ============================================================== -->
+        <div
+          class="lg:col-span-8 bg-terminal-card border border-terminal-border rounded-2xl p-6 shadow-xl flex flex-col"
+        >
+          <!-- Header Tabel & Filter Bar -->
+          <div
+            class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-5 mb-5 border-b border-terminal-border"
+          >
+            <div>
+              <h2
+                class="text-base font-bold text-white flex items-center gap-2"
+              >
+                <span>Riwayat Transaksi Trading</span>
+                <span
+                  id="table-count-badge"
+                  class="text-xs font-mono px-2.5 py-0.5 rounded-full bg-slate-800 text-slate-300 border border-slate-700"
+                  >0</span
+                >
+              </h2>
+              <p class="text-xs text-slate-400 mt-0.5">
+                Tersimpan otomatis di LocalStorage browser Anda
+              </p>
+            </div>
+
+            <!-- Pencarian & Filter Status -->
+            <div class="flex flex-wrap items-center gap-2">
+              <div class="relative">
+                <input
+                  type="text"
+                  id="search-input"
+                  placeholder="Cari Pair / Catatan..."
+                  class="w-44 sm:w-52 bg-terminal-input border border-terminal-border rounded-xl pl-8 pr-3 py-1.5 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-emerald-500 transition"
+                />
+                <svg
+                  class="w-3.5 h-3.5 text-slate-500 absolute left-2.5 top-1/2 -translate-y-1/2"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                  stroke-width="2"
+                >
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
+                  />
+                </svg>
+              </div>
+
+              <select
+                id="filter-status"
+                class="bg-terminal-input border border-terminal-border rounded-xl px-3 py-1.5 text-xs font-mono text-slate-300 focus:outline-none focus:border-emerald-500 transition"
+              >
+                <option value="ALL">Semua Status</option>
+                <option value="PROFIT">Hanya Profit</option>
+                <option value="LOSS">Hanya Loss</option>
+                <option value="BREAKEVEN">Breakeven</option>
+              </select>
+            </div>
+          </div>
+
+          <!-- Pembungkus Tabel Responsif -->
+          <div class="overflow-x-auto -mx-6 px-6">
+            <table class="w-full text-left border-collapse">
+              <thead>
+                <tr
+                  class="border-b border-terminal-border text-[11px] font-mono uppercase text-slate-400 tracking-wider"
+                >
+                  <th class="py-3 pr-4">Waktu &amp; Pair</th>
+                  <th class="py-3 px-3">Posisi &amp; Lot</th>
+                  <th class="py-3 px-3">Entry → Exit</th>
+                  <th class="py-3 px-3 text-right">P&amp;L ($)</th>
+                  <th class="py-3 px-3 text-center">Status</th>
+                  <th class="py-3 px-3">Psikologi / Catatan</th>
+                  <th class="py-3 pl-3 text-right">Aksi</th>
+                </tr>
+              </thead>
+              <tbody
+                id="trade-table-body"
+                class="divide-y divide-terminal-border/60 text-sm"
+              >
+                <!-- Baris data di-render secara dinamis oleh script.js -->
+              </tbody>
+            </table>
+          </div>
+
+          <!-- State Kosong (Empty State) -->
+          <div id="empty-state" class="hidden py-14 text-center">
+            <div
+              class="w-12 h-12 rounded-2xl bg-slate-800/70 border border-slate-700/70 flex items-center justify-center mx-auto mb-3 text-slate-400"
+            >
+              <svg
+                class="w-6 h-6"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+                stroke-width="1.8"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
+                />
+              </svg>
+            </div>
+            <h3 class="text-sm font-semibold text-slate-200">
+              Belum Ada Data Transaksi
+            </h3>
+            <p class="text-xs text-slate-400 max-w-sm mx-auto mt-1">
+              Tambahkan transaksi pertama Anda melalui formulir di samping, atau
+              klik tombol <strong>"+ Data Contoh"</strong> di pojok kanan atas.
+            </p>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <!-- Notifikasi Toast Melayang -->
+    <div
+      id="toast-container"
+      class="fixed bottom-5 right-5 z-50 flex flex-col gap-2 pointer-events-none"
+    ></div>
+
+    <!-- File JavaScript Eksternal -->
+    <script src="script.js"></script>
+  </body>
+</html>
